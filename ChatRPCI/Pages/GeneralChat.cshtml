@@ -1,0 +1,77 @@
+﻿@page
+@model ChatRPCI.GeneralChatModel
+@{
+    ViewData["Title"] = "GeneralChat";
+}
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="container-fluid h1" id="gc_header">
+            General chat
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12  col-sm-8 col-md-6">
+            <div> <span id="validation" class=" text-danger"></span></div> 
+            <Label id="OutputLabel">@Model.userName</Label>
+            <textarea id="msg" type="text" class="form-control" placeholder="Message"></textarea><br>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12  col-sm-8 col-md-6" display="inline-flex">
+            <button id="send_btn" type="submit" class="btn btn-info">Send</button>
+            <button id="clear_btn" type="button" class="btn btn-success">
+                Clear chat
+            </button>
+            <a class="btn btn-secondary" asp-area="" asp-page="/Dialogs">Dialogs</a>
+        </div>
+    </div>
+</div>
+<br>
+<div class="container">
+    <div class="row">
+        <div id="ms" class="col">
+            <h1 id="nomsg">No Message Yet</h1>
+            <div class="msg-wrapper" style=" overflow-y: auto">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script>
+    const hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/chat")
+            .build();
+
+    let us = "@Model.userName";
+
+
+    function clear_val() {
+    $('#validation').text('');
+        }
+
+    $('#clear_btn').on("click", function () {
+        $("p.msg_p").remove();
+    });
+// #region hub
+        hubConnection.on("MessageToClient", function (msg) {
+        $('#msg').val('');
+        $('#nomsg').remove();
+        $('div.msg-wrapper').append('<p class="msg_p"><b>' + us + ':' + '</b> ' + msg + '</p>');
+    });
+    $('#send_btn').on("click", function () {
+        let message = $('#msg').val();
+        if (message == '') {
+            $('#validation').text('Enter message!');
+            setTimeout(clear_val, 5000); 
+        } else {
+            hubConnection.invoke("Send", message);
+        }
+    });
+ //#endregion
+    hubConnection.start();
+    </script>
+}

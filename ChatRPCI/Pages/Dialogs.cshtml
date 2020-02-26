@@ -1,0 +1,133 @@
+﻿@page "{handler?}"
+@model ChatRPCI.DialogsModel
+
+
+@{
+    ViewData["Title"] = "Dialogs";
+}
+
+
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="container-fluid h1" style=" text-align: center;">
+                Private chat
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12  col-sm-8 col-md-6">
+                <div> <span id="validation" class=" text-danger"></span></div>
+                <div>
+                    <textarea id="msg" type="text" class="form-control" placeholder="Message"></textarea><br>
+                    <input id="recp" class="form-control" placeholder="Recipient"><br>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12  col-sm-8 col-md-6 btns_set">
+                <button id="Send_Msg" type="submit" class="btn btn-info btn_set">Send</button>
+                <a class="btn btn-primary" asp-area="" asp-page="/AddMute">Mute user</a>
+                
+                <button id="Clear_Msg_Btn" type="button" class="btn btn-success btn_set">
+                    Clear chat
+                </button>
+            </div>
+        </div>
+    </div>
+    
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h1 id="h">No message yet</h1>
+            <div class="msg-wrapper"></div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+@section Scripts{ 
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+    const hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/dialog")
+        .build();
+    
+    var btns_c = document.getElementsByClassName('close_fr');
+
+
+
+    // #region functions
+    function close() {
+       $('#frnds').empty();
+    }
+    function clear_val() {
+    $('#validation').text('');
+        }
+    for (i = 0; i < btns_c.length; i++) {
+        btns_c[i].addEventListener("click", close);
+    }
+
+    function clear_form() {
+          $('#recp').val('');
+             $('#msg').val('');
+    }
+    //#endregion
+
+
+
+    $('#Clear_Msg_Btn').on("click", function () {
+        $('p.msg_p').remove();
+    });
+
+     
+
+
+
+    // #region hub
+
+     $('#Send_Msg').on("click", function () {
+        let message = $('#msg').val();
+        
+        let recipient = $('#recp').val();
+        if (message == '') {
+            
+            $('#validation').text('Введите сообщение!');
+             setTimeout(clear_val, 5000);
+             clear_form();
+        }
+        else if (recipient == '') {
+             
+            $('#validation').text('Введите имя получателя!');
+             setTimeout(clear_val, 5000);
+             clear_form();
+            }
+         else {
+            hubConnection.invoke("Send", message, recipient);
+        }
+       
+    });
+
+
+  hubConnection.on("SendToClient", function (message, caller) {
+        $('#h').remove();
+        $('#msg').val('');
+        $('div.msg-wrapper').append('<p class="msg_p"><b>' + caller + ':' + '</b> ' + message + '</p>');
+    });
+     hubConnection.on("SendThatMuted", function (s) {
+        $('#h').remove();
+        $('div.msg-wrapper').append('<p>' + s + '</p>');
+     });
+    hubConnection.on("InvalidRecp", function () {
+        $('#validation').text('There is no such user!');
+         setTimeout(clear_val, 5000);
+        clear_form();
+    });
+  
+   //#endregion
+   
+    hubConnection.start();
+</script>
+}
