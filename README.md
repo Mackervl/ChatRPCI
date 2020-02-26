@@ -1,6 +1,6 @@
 # ChatRCPI
 
-This is chat application with ability to make private dialogs or communicate with everyone in general chat.
+This is web chat application (using ASP.NET Core, Razor Pages and Signal R) with ability to make private dialogs or communicate with everyone in general chat.
 
 ## Getting Started
 
