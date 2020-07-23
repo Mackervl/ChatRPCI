@@ -9,6 +9,6 @@ namespace ChatRPCI
     public class User : IdentityUser
     {
         public List<CHsModel> MutedUsers { get; set; }
-     //   public string lol { get; set; }
+     
     }
 }
